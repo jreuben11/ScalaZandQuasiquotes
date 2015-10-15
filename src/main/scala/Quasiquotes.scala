@@ -14,17 +14,20 @@ object Quasiquotes {
 
   def generateCode(): ru.Tree =
     q"package mypackage { class MyClass }"
+
   def saveToFile(path: String, code: Tree) = {
     val writer = new java.io.PrintWriter(path)
     try writer.write(showCode(code))
     finally writer.close()
   }
+
   def jit(): () => Any ={
     val code: ru.Tree = q"""println("compiled and run at runtime!")"""
     val compiledCode: () => Any = toolbox.compile(code)
     val result = compiledCode()
     compiledCode
   }
+
   def spliceAndUnlift(): List[Int] ={
     val x = 1
     val y = 2
@@ -36,6 +39,21 @@ object Quasiquotes {
    //val q"f(..${ints2: List[Int]})" = Quasiquote(StringContext(s))
     ints
   }
+
+  def typecheckType(tree: Tree): Type = toolbox.typecheck(tree, toolbox.TYPEmode).tpe
+
+  def dynamic[T: TypeTag] (a:T, b:T): T = {
+    val code = s"($a + $b): ${typeOf[T]}"
+    val qq: toolbox.u.Tree = toolbox.parse(code) // eg q"(1 + 1): Int"
+    val compiledCode: () => Any = toolbox.compile(qq)
+    val result: Any = compiledCode()
+    result.asInstanceOf[T]
+  }
+
+  def dynamic2[T: TypeTag] (a:T, op:String, b:T): T =  toolbox.compile(toolbox.parse(s"($a$op$b): ${typeOf[T]}"))().asInstanceOf[T]
+
+
+
 }
 
 //object debug {
