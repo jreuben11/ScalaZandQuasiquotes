@@ -1,7 +1,8 @@
 package learningScalaZ
 
 import org.scalatest.{FlatSpec, Matchers}
-
+import scala.language.higherKinds
+import scala.language.implicitConversions
 /**
  * Created by joshr on 14/10/2015.
  */

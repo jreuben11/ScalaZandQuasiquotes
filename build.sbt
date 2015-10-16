@@ -23,5 +23,6 @@ libraryDependencies += "org.scalaz" %% "scalaz-scalacheck-binding" % scalaZVersi
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 
-scalacOptions += "-feature"
+scalacOptions += "-feature" //:kind
 initialCommands in console := "import scalaz._, Scalaz._"
+initialCommands in console in Test := "import scalaz._, Scalaz._, scalacheck.ScalazProperties._, scalacheck.ScalazArbitrary._,scalacheck.ScalaCheckBinding._"

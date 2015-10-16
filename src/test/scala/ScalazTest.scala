@@ -67,8 +67,8 @@ class ScalazTest extends FlatSpec with Matchers {
     (Tags.Multiplication(2) |+| Tags.Multiplication(3)) should be (6)
 
     // Tags.Disjunction (||), Tags.Conjunction (&&)
-    // (Tags.Disjunction(true) |+| Tags.Disjunction(false)) should be (true)
-    // (Tags.Conjunction(true) |+| Tags.Conjunction(false)) should be ( false)
+    Tag.unwrap((Tags.Disjunction(true) |+| Tags.Disjunction(false))) should be (true)
+    Tag.unwrap((Tags.Conjunction(true) |+| Tags.Conjunction(false))) should be ( false)
     (Ordering.LT: Ordering) |+| (Ordering.GT: Ordering) should be (Ordering.LT)
     (none: Option[String]) |+| "andy".some should be ("andy".some)
     (Tags.First('a'.some) |+| Tags.First('b'.some)) should be ('a'.some)
