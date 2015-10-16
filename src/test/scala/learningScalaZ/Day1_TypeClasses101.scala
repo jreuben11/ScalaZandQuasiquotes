@@ -1,13 +1,14 @@
 package learningScalaZ
 
 import org.scalatest.{Matchers, FlatSpec}
+import scala.language.higherKinds
 import scalaz._
 import Scalaz._
 
 /**
  * Created by joshr on 14/10/2015.
  */
-class Day1_TypeClasses101  extends FlatSpec with Matchers {
+class Day1_Functor  extends FlatSpec with Matchers {
   "ScalaZ" should "supply shorthand for scala getorElse, ternary" in {
     1.some | 2 should be (1) // Option getorElse
     (1 > 10)? 1 | 2 should be (2) // ternary
@@ -31,6 +32,10 @@ class Day1_TypeClasses101  extends FlatSpec with Matchers {
     List(1, 2, 3).strengthR("x")  should be (List((1,"x"), (2,"x"), (3,"x")) )
     List(1, 2, 3).void            should be (List((), (), ()) )
   }
+}
+
+
+class Day2_Applicatives  extends FlatSpec with Matchers {
 
   "ScalaZ Applicative" should "takes value A and returns F[A]" in {
     // def point[A](a: => A): F[A]
@@ -84,6 +89,55 @@ class Day1_TypeClasses101  extends FlatSpec with Matchers {
     (3.some |@| 5.some) {_ + _}  should be (Some(8))
   }
 
+  "ScalaZ Applicative" should "not really sure" in {
+    val f = Apply[Option].lift2((_: Int) :: (_: List[Int]))
+    f(3.some, List(4).some) should be  (Some(List(3, 4)))
 
+    def sequenceA[F[_]: Applicative, A](list: List[F[A]]): F[List[A]]  = list match {
+      case Nil => (Nil: List[A]).point[F]
+      case x :: xs => (x |@| sequenceA(xs)) {_ :: _}
+    }
+    sequenceA(List(1.some, 2.some))       should be (Some(List(1, 2)))
+    sequenceA(List(3.some, none, 1.some)) should be (None)
+    sequenceA(List(List(1, 2, 3), List(4, 5, 6))) should be (
+      List(
+        List(1, 4),
+        List(1, 5),
+        List(1, 6),
+        List(2, 4),
+        List(2, 5),
+        List(2, 6),
+        List(3, 4),
+        List(3, 5),
+        List(3, 6)
+      )
+    )
 
+  }
 }
+
+class Day3_Kinds  extends FlatSpec with Matchers {
+
+  //val x = kind(scala.Option)  // - only in REPL
+  trait Test {
+    type F[_]
+  }
+  "ScalaZ Tagged Types" should "ensure that variables match business types" in {
+    //type Tagged[U] = { type Tag = U }
+    //type @@[T, U] = T with Tagged[U]
+    sealed trait KiloGram
+    def KiloGram[A](a: A): A @@ KiloGram = Tag[A, KiloGram](a)
+    trait JoulePerKiloGram
+    def JoulePerKiloGram[A](a: A): A @@ JoulePerKiloGram = Tag[A, JoulePerKiloGram](a)
+
+    val factor = 299792458.0
+    val mass: @@[Double, KiloGram] = KiloGram(20.0)
+    def energyR(m: Double @@ KiloGram): Double @@ JoulePerKiloGram = JoulePerKiloGram(Math.pow(factor,2) * Tag.unsubst[Double, Id, KiloGram](m))
+    val convertedMass: @@[Double, JoulePerKiloGram] = energyR(mass)
+    Tag.unwrap(convertedMass) should be (Math.pow(factor,2) * 20.0)
+  }
+  "ScalaZ Shows" should "yield a string representation" in {
+    List(1, 2, 3).shows should be ("[1,2,3]")
+  }
+}
+
