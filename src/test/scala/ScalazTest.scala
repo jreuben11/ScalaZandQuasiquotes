@@ -324,7 +324,9 @@ class ScalazTest extends FlatSpec with Matchers {
   }
 
   "Scalaz" should "State[S, +A] = StateT[Id, S, A]" in {
-    State[List[Int], Int] { case x :: xs => (xs, x) }.run(1 :: Nil) assert_===(Nil, 1)
+    State[List[Int], Int] {
+      case x :: xs => (xs, x)
+    }.run(1 :: Nil) assert_===(Nil, 1)
     (for {
       xs <- get[List[Int]]
       _ <- put(xs.tail)
