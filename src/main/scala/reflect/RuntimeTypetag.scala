@@ -1,8 +1,11 @@
+package reflect
+
 /**
  * Created by joshr on 10/2/15.
  */
 
 //from scala-reflect
+
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 object RuntimeTypetag {

@@ -1,9 +1,10 @@
-import org.scalatest.{Matchers, FlatSpec}
+package reflect
+
+import Quasiquotes._
+import org.scalatest.{FlatSpec, Matchers}
+
 import scala.reflect.runtime.universe._
 import scala.reflect.runtime.{universe => ru}
-import scala.reflect.runtime.currentMirror
-import scala.tools.reflect.ToolBox
-import Quasiquotes._
 /**
  * Created by joshr on 10/8/15.
  */

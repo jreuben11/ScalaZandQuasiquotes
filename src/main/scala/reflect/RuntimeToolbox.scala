@@ -1,8 +1,11 @@
+package reflect
+
 /**
  * Created by joshr on 10/6/15.
  */
-import scala.tools.reflect.ToolBox  // see SBT
+
 import scala.reflect.runtime.universe._
+import scala.tools.reflect.ToolBox
 
 object RuntimeToolbox {
   val toolbox = runtimeMirror(getClass.getClassLoader).mkToolBox()

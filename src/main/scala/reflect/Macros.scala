@@ -1,20 +1,19 @@
-/**
- * Created by joshr on 10/3/15.
- */
+package reflect
 
-import scala.collection.mutable
-import scala.collection.mutable.ListBuffer
-import scala.language.experimental.macros // required to enable
-import scala.reflect.runtime.universe._
+
+import scala.language.experimental.macros
 import scala.reflect.macros.blackbox.Context
 
+/**
+ * Created by joshr on 22/10/2015.
+ */
 object Macros {
   def getSourcecodeLocation: SourcecodeLocation = macro getSourcecodeLocation_impl
   //must be public
   def getSourcecodeLocation_impl(context: Context): context.Expr[SourcecodeLocation] = {
     import context.universe._
     val position = context.macroApplication.pos
-    val moduleSymbol = context.mirror.staticModule("SourcecodeLocation") // typename
+    val moduleSymbol = context.mirror.staticModule("reflect.SourcecodeLocation") // typename
 
     context.Expr(Apply(
       Ident(moduleSymbol),
@@ -48,6 +47,5 @@ object Macros {
 //    c.Expr[Unit](Block(stats.toList, Literal(Constant(()))))
 //  }
 }
-
 
 case class SourcecodeLocation(filename: String, line: Int, column: Int)

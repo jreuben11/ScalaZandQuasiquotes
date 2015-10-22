@@ -7,8 +7,9 @@ version := "1.0"
 
 scalaVersion := "2.11.7"
 
-resolvers +=  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+//resolvers +=  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 resolvers += Resolver.sonatypeRepo("releases")
+resolvers += Resolver.sonatypeRepo("snapshots")
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
 //dependencies
 libraryDependencies += "org.scalameta" %% "scalameta"  % "0.1.0-SNAPSHOT"
@@ -20,6 +21,8 @@ libraryDependencies += "org.scalaz" %% "scalaz-core" % scalaZVersion
 libraryDependencies += "org.scalaz" %% "scalaz-effect" % scalaZVersion
 libraryDependencies += "org.scalaz" %% "scalaz-typelevel" % scalaZVersion
 libraryDependencies += "org.scalaz" %% "scalaz-scalacheck-binding" % scalaZVersion % "test"
+libraryDependencies += "com.chuusai" %% "shapeless" % "2.2.5"
+
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 

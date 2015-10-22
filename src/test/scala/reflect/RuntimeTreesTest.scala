@@ -1,10 +1,14 @@
+package reflect
+
 /**
  * Created by joshr on 10/3/15.
  */
-import org.scalatest.{Matchers, FlatSpec}
-import scala.reflect.runtime.universe._
-import RuntimeTrees._
+
 import RuntimeToolbox._
+import RuntimeTrees._
+import org.scalatest.{FlatSpec, Matchers}
+
+import scala.reflect.runtime.universe._
 class RuntimeTreesTest extends FlatSpec with Matchers {
   "RuntimeTrees" should "be able to construct expression trees" in {
     show(buildExpressionTree("x", "plus", 1)) should be  ("x.$plus(1)")

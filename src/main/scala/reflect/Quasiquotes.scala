@@ -1,3 +1,5 @@
+package reflect
+
 /**
  * Created by joshr on 10/8/15.
  */
@@ -5,8 +7,7 @@
 
 //import scala.meta.dialects.Quasiquote - BAD !!!
 import scala.reflect.runtime.universe._
-import scala.reflect.runtime.{universe => ru}
-import scala.reflect.runtime.currentMirror
+import scala.reflect.runtime.{currentMirror, universe => ru}
 import scala.tools.reflect.ToolBox
 
 object Quasiquotes {

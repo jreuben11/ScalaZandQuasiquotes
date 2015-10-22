@@ -1,9 +1,11 @@
-/**
- * Created by joshr on 10/2/15.
- */
-import org.scalatest._
-import RuntimeTypetag._
+package reflect
 
+import RuntimeTypetag._
+import org.scalatest.{FlatSpec, Matchers}
+
+/**
+ * Created by joshr on 22/10/2015.
+ */
 class RuntimeTypetagTest extends FlatSpec with Matchers {
   "TypeTag" should "be able to reflect over an instance type" in {
     val l = List(1,2,3)
@@ -52,10 +54,3 @@ class RuntimeTypetagTest extends FlatSpec with Matchers {
 
 
 }
-
-case class Foo(name: String, count: Int = 0){
-  def bar = name
-}
-object Baz { def bar = 2 }
-
-class Animal; class Cat extends Animal
