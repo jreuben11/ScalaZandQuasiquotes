@@ -6,8 +6,7 @@
 import org.scalatest.{Matchers, FlatSpec}
 import shapeless._
 import shapeless.poly._
-import shapeless.syntax.zipper._
-import shapeless.syntax.std.tuple._
+
 import shapeless.syntax.std.function._
 import shapeless.ops.function._
 
@@ -56,6 +55,7 @@ class ShapelessTest extends FlatSpec with Matchers {
   }
 
   "Shapeless HList" should "Heterogenous list" in {
+    import shapeless.syntax.zipper._
     val sets = Set(1) :: Set("foo") :: HNil
     val opts = sets map choose  should be (Some(1) :: Some("foo") :: HNil )
     val l = (23 :: "foo" :: HNil) :: HNil :: (true :: HNil) :: HNil
@@ -71,7 +71,9 @@ class ShapelessTest extends FlatSpec with Matchers {
 
   }
 
-  "Shapeless HList" should "support HList-style operations on standard Scala tuples" in {
+  "Shapeless HList implicit tuple ops" should "support HList-style operations on standard Scala tuples" in {
+    import shapeless.syntax.std.tuple._
+    import shapeless.syntax.zipper._
     (23, "foo", true).head should be (23)
     (23, "foo", true).tail should be (("foo", true))
     //(23, "foo", true).drop(2) should be ( (true) )  //tuple1 blows up !
@@ -102,8 +104,111 @@ class ShapelessTest extends FlatSpec with Matchers {
     = f.toProduct(gen.to(p))
 
     applyProduct(1, 2)((_: Int)+(_: Int)) should be (3)
-
     applyProduct(1, 2, 3)((_: Int)*(_: Int)*(_: Int)) should be (6)
 
   }
+
+  "Shapeless HMap" should "hetrogenous maps enforce Key/value relations" in {
+    class BiMapIS[K, V]
+    implicit val intToString = new BiMapIS[Int, String]
+    implicit val stringToInt = new BiMapIS[String, Int]
+
+    val hm = HMap[BiMapIS](23 -> "foo", "bar" -> 13)
+    //val hm2 = HMap[BiMapIS](23 -> "foo", 23 -> 13)   // Does not compile
+    hm.get(23) should be (Some("foo"))
+    hm.get("bar") should be (Some(13))
+
+    import hm._
+    val l = 23 :: "bar" :: HNil
+    l map hm should be ("foo" :: 13 :: HNil)
+  }
+
+  "Shapeless narrow" should "support Singleton-typed literals" in {
+    import shapeless.syntax.std.tuple._
+    import shapeless.syntax.singleton._
+    import shapeless.syntax.SingletonOps
+    val l = 23 :: "foo" :: true :: HNil
+    l(1) should be ("foo")
+    val t = (23, "foo", true)
+    t(1) should be ("foo")
+
+    23.narrow should be (23) // ???
+    "foo".narrow should be ("foo")
+
+    val (wTrue, wFalse) = (Witness(true), Witness(false))
+    type True = wTrue.T
+    type False = wFalse.T
+    trait Select[B] { type Out } // typeclass
+    implicit val selInt = new Select[True] { type Out = Int }
+    implicit val selString = new Select[False] { type Out = String }
+    // compilation failed here: Error:(145, 48) type Out is not a member of shapeless.WitnessWith[Select]
+
+//    def select[T](b: WitnessWith[Select])(t: b.Out) = t
+//    select(true)(23)
+//    select(false)("foo")
+
+    val s1: Symbol = 'foo   // non-singleton type
+    val s2 = 'foo.narrow   // singleton type
+
+  }
+  "Shapeless record ->>"  should "be extensible" in {
+    import shapeless.syntax.singleton._
+    import shapeless.record._
+    val book =
+      ("author" ->> "Benjamin Pierce") ::
+      ("title"  ->> "Types and Programming Languages") ::
+      ("id"     ->>  262162091) ::
+      ("price"  ->>  44.11) ::
+      HNil
+    book("author") should be ("Benjamin Pierce")
+    book("title")   should be("Types and Programming Languages")
+    book("id") should be(262162091)
+    book("price")   should be(44.11)
+    book.keys should be ("author" :: "title" :: "id" :: "price" :: HNil)
+    book.values should be ("Benjamin Pierce" :: "Types and Programming Languages" :: 262162091 :: 44.11 :: HNil)
+    val newPrice = book("price") + 2.0
+    newPrice should be (46.11)
+    val updated = book +("price" ->> newPrice) // Update an existing field
+    updated should be ("Benjamin Pierce" :: "Types and Programming Languages" :: 262162091 :: 46.11 :: HNil)
+    val extended = updated + ("inPrint" ->> true)  // Add a new field
+    extended should be ("Benjamin Pierce" :: "Types and Programming Languages" :: 262162091 :: 46.11 :: true :: HNil)
+    val noId = extended - "id"  // Removed a field
+    noId should be ("Benjamin Pierce" :: "Types and Programming Languages" :: 46.11 :: true :: HNil)
+
+
+
+  }
+
+  "Shapeless Coproduct :+:" should "support discriminated unions: mapping, selection and unification" in {
+
+    type ISB = Int :+: String :+: Boolean :+: CNil
+    val isb = Coproduct[ISB]("foo")
+    isb.select[Int] should be (None)
+    isb.select[String] should be (Some("foo"))
+
+    // doesnt compile: RecordType
+    //val uSchema = RecordType.like('i ->> 23 :: 's ->> "foo" :: 'b ->> true :: HNil)
+    // type U = uSchema.Union
+    // val u = Coproduct[U]('s ->> "foo")  // Inject a String into the union at label 's
+    //u.get('i) should be (None)
+
+  }
+
+  "Shapeless Generic[T]" should "Generic representation of (sealed families of) case classes" in {
+    case class Foo(i: Int, s: String, b: Boolean)
+    val foo = Foo(23, "foo", true)
+    val fooGen = Generic[Foo]
+    fooGen.to(foo) should be( 23 :: "foo" :: true :: HNil)
+    val f1 = fooGen.to(foo)
+    val f2 = 13 :: f1.tail
+    f2 should be (13 :: "foo" :: true :: HNil)
+    fooGen.from(f2) should be (Foo(13, "foo", true))
+
+  }
+
+
+
+
+
+
 }
