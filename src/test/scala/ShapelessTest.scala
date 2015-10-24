@@ -198,17 +198,78 @@ class ShapelessTest extends FlatSpec with Matchers {
     case class Foo(i: Int, s: String, b: Boolean)
     val foo = Foo(23, "foo", true)
     val fooGen = Generic[Foo]
-    fooGen.to(foo) should be( 23 :: "foo" :: true :: HNil)
+    fooGen.to(foo) should be(23 :: "foo" :: true :: HNil)
     val f1 = fooGen.to(foo)
     val f2 = 13 :: f1.tail
-    f2 should be (13 :: "foo" :: true :: HNil)
-    fooGen.from(f2) should be (Foo(13, "foo", true))
+    f2 should be(13 :: "foo" :: true :: HNil)
+    fooGen.from(f2) should be(Foo(13, "foo", true))
 
   }
 
+  "Shapeless lift function to Poly ->" should "Transform tree by applying poly everywhere" in {
+    // Simple recursive case class family
+    sealed trait Tree[T]
+    case class Leaf[T](t: T) extends Tree[T]
+    case class Node[T](left: Tree[T], right: Tree[T]) extends Tree[T]
+    val tree: Tree[Int] =
+      Node(
+        Node(
+          Node(
+            Leaf(1),
+            Node(
+              Leaf(2),
+              Leaf(3)
+            )
+          ),
+          Leaf(4)
+        ),
+        Node(
+          Leaf(5),
+          Leaf(6)
+        )
+      )
 
+    val tree2: Tree[Int] =
+      Node(
+        Node(
+          Node(
+            Leaf(2),
+            Node(
+              Leaf(3),
+              Leaf(4)
+            )
+          ),
+          Leaf(5)
+        ),
+        Node(
+          Leaf(6),
+          Leaf(7)
+        )
+      )
 
+    // Polymorphic function which adds 1 to any Int and is the identity on all other values
+    object inc extends ->((i: Int) => i+1)
+    // Transform tree by applying inc everywhere
+    // FAILS TO COMPILE:
+    //val x = everywhere(inc)(tree) should be (tree2)
+  }
 
+  "Shapeless LabeledGeneric[T]" should "support symbolic access, type safe operations on fields" in {
+    import shapeless.record._
+    import shapeless.syntax.singleton._
+    case class Book(author: String, title: String, id: Int, price: Double)
+    val tapl = Book("Benjamin Pierce", "Types and Programming Languages", 262162091, 44.11)
 
+    val bookGen = LabelledGeneric[Book]
+    val rec = bookGen.to(tapl) // Convert case class value to generic representation
+    rec should be ("Benjamin Pierce" :: "Types and Programming Languages" :: 262162091 :: 44.11 :: HNil)
+    rec('price) should be (44.11) // Access the price field symbolically, maintaining type information
+    // type safe operations on fields
+    bookGen.from(rec.updateWith('price)(_+2.0)) should be (Book("Benjamin Pierce", "Types and Programming Languages", 262162091, 46.11))
 
+    case class ExtendedBook(author: String, title: String, id: Int, price: Double, inPrint: Boolean)
+    val bookExtGen = LabelledGeneric[ExtendedBook]
+    val rec2 = bookExtGen.from(rec + ('inPrint ->> true))  // map values between case classes via generic representation
+    rec2 should be (ExtendedBook("Benjamin Pierce", "Types and Programming Languages", 262162091, 44.11, true))
+  }
 }
