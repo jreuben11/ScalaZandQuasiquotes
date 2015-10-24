@@ -6,9 +6,9 @@
 import org.scalatest.{Matchers, FlatSpec}
 import shapeless._
 import shapeless.poly._
+// import shapeless.test.illTyped
 
-import shapeless.syntax.std.function._
-import shapeless.ops.function._
+
 
 
 
@@ -97,6 +97,8 @@ class ShapelessTest extends FlatSpec with Matchers {
   }
 
   "Shapeless" should "abstract over arity" in {
+    import shapeless.syntax.std.function._
+    import shapeless.ops.function._
     def applyProduct[P <: Product, F, L <: HList, R]
     (p: P)(f: F)
     (implicit gen: Generic.Aux[P, L],
@@ -272,4 +274,122 @@ class ShapelessTest extends FlatSpec with Matchers {
     val rec2 = bookExtGen.from(rec + ('inPrint ->> true))  // map values between case classes via generic representation
     rec2 should be (ExtendedBook("Benjamin Pierce", "Types and Programming Languages", 262162091, 44.11, true))
   }
+
+  "shapeless lens[T] >>" should "work" in {
+    // A pair of ordinary case classes ...
+    case class Address(street : String, city : String, postcode : String)
+    case class Person(name : String, age : Int, address : Address)
+
+    // Some lenses over Person/Address ...
+    val nameLens     = lens[Person] >> 'name
+    val ageLens      = lens[Person] >> 'age
+    val addressLens  = lens[Person] >> 'address
+    val streetLens   = lens[Person] >> 'address >> 'street
+    val cityLens     = lens[Person] >> 'address >> 'city
+    val postcodeLens = lens[Person] >> 'address >> 'postcode
+
+    val person = Person("Joe Grey", 37, Address("Southover Street", "Brighton", "BN2 9UA"))
+    ageLens.get(person) should be (37)
+    val person2 = ageLens.set(person)(38)
+    person2.age should be (38)
+    val person3 = ageLens.modify(person2)(_ + 1)
+    person3.age should be (39)
+
+  }
+
+  // COMPILATION FAIL: |+| is not a member of Foo
+//  "shapeless monoid |+|" should "Automatic type class instance derivation" in {
+//    import scalaz._
+//    import Scalaz._
+//
+//    // A pair of arbitrary case classes
+//    case class Foo(i : Int, s : String)
+//    case class Bar(b : Boolean, s : String, d : Double)
+//
+//    Foo(13, "foo") |+| Foo(23, "bar") should be ( Foo(36,"foobar") )
+//
+//    Bar(true, "foo", 1.0) |+| Bar(false, "bar", 3.0) should be( Bar(true,"foobar",4.0) )
+//  }
+
+  "Shapeless" should "First class lazy values tie implicit recursive knots" in {
+    // Simple cons list
+    sealed trait List[+T]
+    case class Cons[T](hd: T, tl: List[T]) extends List[T]
+    sealed trait Nil extends List[Nothing]
+    case object Nil extends Nil
+
+    // TypeClass
+    trait Show[T] {
+      def apply(t: T): String
+    }
+    object Show {
+      // Base case for Int
+      implicit def showInt: Show[Int] = new Show[Int] {
+        def apply(t: Int) = t.toString
+      }
+
+      // Base case for Nil
+      implicit def showNil: Show[Nil] = new Show[Nil] {
+        def apply(t: Nil) = "Nil"
+      }
+
+      // Case for Cons[T]: note (mutually) recursive implicit argument referencing Show[List[T]]
+      implicit def showCons[T](implicit st: Lazy[Show[T]], sl: Lazy[Show[List[T]]]): Show[Cons[T]] = new Show[Cons[T]] {
+        def apply(t: Cons[T]) = s"Cons(${show(t.hd)(st.value)}, ${show(t.tl)(sl.value)})"
+      }
+
+      // Case for List[T]: note (mutually) recursive implicit argument referencing Show[Cons[T]]
+      implicit def showList[T](implicit sc: Lazy[Show[Cons[T]]]): Show[List[T]] = new Show[List[T]] {
+        def apply(t: List[T]) = t match {
+          case n: Nil => show(n)
+          case c: Cons[T] => show(c)(sc.value)
+        }
+      }
+    }
+    def show[T](t: T)(implicit s: Show[T]) = s(t)
+
+    val l: List[Int] = Cons(1, Cons(2, Cons(3, Nil)))
+
+    // Without the Lazy wrappers above the following would diverge ...
+    show(l)  should be  ("Cons(1, Cons(2, Cons(3, Nil)))")
+
+  }
+
+  "shapeless Sized" should "supports Collections with statically known sizes" in {
+    def row(cols : Seq[String]) = cols.mkString(",")
+
+    def csv[N <: Nat]
+    (hdrs : Sized[Seq[String], N],
+     rows : List[Sized[Seq[String], N]]) = row(hdrs) :: rows.map(row(_))
+
+    val hdrs = Sized("Title", "Author")
+
+    val rows = List(
+      Sized("Types and Programming Languages", "Benjamin Pierce"),
+      Sized("The Implementation of Functional Programming Languages", "Simon Peyton-Jones")
+    )
+
+    // hdrs and rows statically known to have the same number of columns
+    val formatted = csv(hdrs, rows)                        // Compiles
+  }
+
+  "shapeless typeable cast" should "support Type safe cast" in {
+    import shapeless.syntax.typeable._
+    val l: Any = List(Vector("foo", "bar", "baz"), Vector("wibble"))
+    l.cast[List[Vector[String]]] should be (Some(l))
+    l.cast[List[Vector[Int]]] should be (None)
+    l.cast[List[List[String]]] should be (None)
+
+    //Typeable extractors allow more precision in pattern matches
+    val `List[String]` = TypeCase[List[String]]
+    val `List[Int]` = TypeCase[List[Int]]
+
+    val li =  List(1, 2, 3)
+    def typematch(li: Any) = li match {
+      case `List[String]`(List(s, _*)) => s.length
+      case `List[Int]`(List(i, _*))    => i+1
+    }
+    typematch(li) should be (2)
+  }
+
 }
