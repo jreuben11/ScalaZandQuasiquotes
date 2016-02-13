@@ -2,7 +2,7 @@
  * Created by joshr on 10/2/15.
  */
 
-object entry extends App {
+class entry extends App {
 
 
   println("bye")
