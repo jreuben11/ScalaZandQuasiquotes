@@ -15,7 +15,7 @@ class Day7_ApplicativeBuilder extends FlatSpec with Matchers {
   "ScalaZ AB" should "work" in {
     (3.some |@| 5.some) {_ + _} should be(8.some)
     val f = ({(_: Int) * 2} |@| {(_: Int) + 10}) {_ + _}
-    f(1) should be(12)
+    f(1) should be(13)
   }
 
   "ScalaZ State" should "just a Stateful Stack" in {

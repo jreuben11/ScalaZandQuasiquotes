@@ -12,7 +12,7 @@ class RuntimeTypetagTest extends FlatSpec with Matchers {
     val t = inspectRuntimeType(l)
     val symbols = t.decls //reflection
     t.toString should be ("List[Int]")
-    inspectRuntimeType(new Cat).toString should be ("Cat")
+    inspectRuntimeType(new Cat).toString should be ("reflect.Cat")
     inspectRuntimeType(5).toString should be ("Int")
   }
   "TypeTag" should "be able to reflect over an instance type 2" in {
@@ -20,7 +20,7 @@ class RuntimeTypetagTest extends FlatSpec with Matchers {
     val t = inspectRuntimeType2(l)
     val symbols = t.decls //reflection
     t.toString should be ("List[Int]")
-    inspectRuntimeType2(new Cat).toString should be ("Cat")
+    inspectRuntimeType2(new Cat).toString should be ("reflect.Cat")
     inspectRuntimeType2(5).toString should be ("Int")
   }
 
