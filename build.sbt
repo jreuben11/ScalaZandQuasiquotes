@@ -25,7 +25,7 @@ libraryDependencies += "org.scalaz" %% "scalaz-scalacheck-binding" % scalaZVersi
 libraryDependencies += "com.github.mpilquist" %% "simulacrum" % "0.7.0"
 libraryDependencies += "com.chuusai" %% "shapeless" % "2.3.0"
 
-
+libraryDependencies += "com.jsuereth" %% "scala-arm" % "1.4"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"
 
