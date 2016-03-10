@@ -1,4 +1,4 @@
-import commonAlgos.{Fibonacci, SubstringCount, BinarySearch}
+import commonAlgos._
 import org.scalatest.FunSuite
 
 /**
@@ -57,5 +57,20 @@ class CommonAlgoTest extends FunSuite{
     assert((0 to 12).map(tailrecursiveFib(_)) === fib12)
     assert((0 to 12).map(foldFib(_)) === fib12)
     assert(iterativeFib.take(13).toVector === fib12)
+  }
+
+  test("permutations"){
+    import Permutations._
+    val builtInPermutations = List('a, 'b, 'c).permutations.toList
+    val expectedPermutations = List(
+      List('a, 'b, 'c),
+        List('a, 'c, 'b),
+        List('b, 'a, 'c),
+        List('b, 'c, 'a),
+        List('c, 'a, 'b),
+        List('c, 'b, 'a)
+    )
+    assert (builtInPermutations === expectedPermutations)
+    assert(permutations(List('a, 'b, 'c)) === expectedPermutations)
   }
 }
