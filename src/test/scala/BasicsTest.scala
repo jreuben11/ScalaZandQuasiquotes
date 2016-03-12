@@ -2,6 +2,7 @@
   * Created by joshr on 13/02/2016.
   */
 import org.scalatest.{Matchers, FlatSpec}
+import patterns.Singleton
 
 class BasicsTest extends FlatSpec with Matchers {
 
