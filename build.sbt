@@ -22,6 +22,7 @@ libraryDependencies += "org.scalaz" %% "scalaz-effect" % scalaZVersion
 // libraryDependencies += "org.scalaz" %% "scalaz-typelevel" % scalaZVersion
 libraryDependencies += "org.scalaz" %% "scalaz-scalacheck-binding" % scalaZVersion % "test"
 
+libraryDependencies += "org.typelevel" %% "cats" % "0.4.0"
 libraryDependencies += "com.github.mpilquist" %% "simulacrum" % "0.7.0"
 libraryDependencies += "com.chuusai" %% "shapeless" % "2.3.0"
 
@@ -30,11 +31,27 @@ libraryDependencies += "com.jsuereth" %% "scala-arm" % "1.4"
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.6" % "test"
 
 javaOptions += "-XX:+PrintFlagsFinal"
-scalacOptions += "-feature" //:kind
-scalacOptions += "-language:implicitConversions"
-scalacOptions += "-language:higherKinds"
+
 
 initialCommands in console := "import scalaz._, Scalaz._"
 initialCommands in console in Test := "import scalaz._, Scalaz._, scalacheck.ScalazProperties._, scalacheck.ScalazArbitrary._,scalacheck.ScalaCheckBinding._"
 mainClass in (Compile,run) := Some("entry")
-//mainClass := Some("entry")
+
+scalacOptions := Seq(
+  "-deprecation",
+  "-encoding", "UTF-8",
+  "-feature",
+  "-language:existentials",
+  "-language:higherKinds",
+  "-language:implicitConversions",
+  "-language:experimental.macros",
+  "-unchecked",
+  "-Xfatal-warnings",
+  "-Xlint",
+  "-Yinline-warnings",
+  "-Yno-adapted-args",
+  "-Ywarn-dead-code",
+  "-Ywarn-numeric-widen",
+  "-Ywarn-value-discard",
+  "-Xfuture"
+)
