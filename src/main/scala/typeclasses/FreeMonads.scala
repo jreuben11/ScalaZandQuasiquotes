@@ -7,6 +7,9 @@ package typeclasses
 import cats.Functor
 import cats.free.Free
 import cats.free.Free.liftF
+import cats.{Id, ~>}
+import scala.collection.mutable
+
 
 // Create an ADT representing your grammar
 sealed trait KVStoreA[+Next]
@@ -50,7 +53,7 @@ object FreeMonads {
       _ <- put[T](key, f(v))
     } yield ()
 
-  // Build a program
+  // Build a static program
   def program: KVStore[Int] =
     for {
       _ <- put("wild-cats", 2)
@@ -60,6 +63,44 @@ object FreeMonads {
       _ <- delete("tame-cats")
     } yield n
 
+  // Write a compiler for programs
+  // a very simple (and imprecise) key-value store
+  val kvs = mutable.Map.empty[String, Any]
+  // the program will crash if a key is not found, or if a type is incorrectly specified.
+  def impureCompiler =
+    new (KVStoreA ~> Id) {
+      def apply[A](fa: KVStoreA[A]): Id[A] =
+          fa match {
+            case Put(key, value, next) =>
+              println(s"put($key, $value)")
+              kvs(key) = value
+              next
+            case g: Get[t, A] =>
+              println(s"get(${g.key})")
+              g.onResult(kvs(g.key).asInstanceOf[t])
+            case Delete(key, next) =>
+              println(s"delete($key)")
+              kvs.remove(key)
+              next
+          }
+    }
+
+
+  // Run the program
+  val result: Id[Int] = program.foldMap(impureCompiler)
+
+  // Pure computation
+  def compilePure[A](program: KVStore[A], kvs: Map[String, A]): Map[String, A] =
+    program.fold(_ => kvs,
+      {
+        case Put(key, value, next) => // help scalac past type erasure
+          compilePure[A](next, kvs + (key -> value.asInstanceOf[A]))
+        case g: Get[a, f] => // a bit more help for scalac
+          compilePure(g.onResult(kvs(g.key).asInstanceOf[a]), kvs)
+        case Delete(key, next) =>
+          compilePure(next, kvs - key)
+      })
+  val result2: Map[String, Int] = compilePure(program, Map.empty)
 }
 
 
